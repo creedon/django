@@ -7,6 +7,7 @@ var SelectBox = {
         var cache = SelectBox.cache[id];
         for (var i = 0; (node = box.options[i]); i++) {
             cache.push({value: node.value, text: node.text, displayed: 1});
+        SelectBox.sort(id);
         }
     },
     redisplay: function(id) {
@@ -73,6 +74,7 @@ var SelectBox = {
             }
         }
         SelectBox.redisplay(from);
+        SelectBox.sort(to);
         SelectBox.redisplay(to);
     },
     move_all: function(from, to) {
@@ -86,6 +88,7 @@ var SelectBox = {
             }
         }
         SelectBox.redisplay(from);
+        SelectBox.sort(to);
         SelectBox.redisplay(to);
     },
     sort: function(id) {
