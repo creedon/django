@@ -246,18 +246,16 @@ class WizardView(TemplateView):
 
         The wizard will render either the current step (if form validation
         wasn't successful), the next step (if the current step was stored
-        successful) or the done view (if no more steps are available)
+        successfully) or the done view (if no more steps are available)
         """
         # Look for a wizard_goto_step element in the posted data which
         # contains a valid step name. If one was found, render the requested
         # form. (This makes stepping back a lot easier).
-        wizard_goto_step = self.request.POST.get('wizard_goto_step', None)
-        if wizard_goto_step and wizard_goto_step in self.get_form_list():
-            self.storage.current_step = wizard_goto_step
-            form = self.get_form(
-                data=self.storage.get_step_data(self.steps.current),
-                files=self.storage.get_step_files(self.steps.current))
-            return self.render(form)
+        wizard_cancel_step_goto = self.request.POST.get(
+            'wizard_cancel_step_goto', None)
+        if wizard_cancel_step_goto and wizard_cancel_step_goto in \
+            self.get_form_list():
+            return self.render_step(wizard_cancel_step_goto)
 
         # Check if form was refreshed
         management_form = ManagementForm(self.request.POST, prefix=self.prefix)
@@ -279,6 +277,11 @@ class WizardView(TemplateView):
             # if the form is valid, store the cleaned data and files.
             self.storage.set_step_data(self.steps.current, self.process_step(form))
             self.storage.set_step_files(self.steps.current, self.process_step_files(form))
+
+            # check if this is a goto step
+            wizard_goto_step = self.request.POST.get('wizard_goto_step', None)
+            if wizard_goto_step and wizard_goto_step in self.get_form_list():
+                return self.render_step(wizard_goto_step)
 
             # check if the current step is the last step
             if self.steps.current == self.steps.last:
@@ -552,6 +555,16 @@ class WizardView(TemplateView):
         """
         raise NotImplementedError("Your %s class has not defined a done() "
             "method, which is required." % self.__class__.__name__)
+
+    def render_step ( self, step ):
+        """
+        This method is used to render a given step. `step` contains the step-name.
+        """
+        self.storage.current_step = step
+        form = self.get_form(
+            data=self.storage.get_step_data(self.steps.current),
+            files=self.storage.get_step_files(self.steps.current))
+        return self.render(form)
 
 
 class SessionWizardView(WizardView):
